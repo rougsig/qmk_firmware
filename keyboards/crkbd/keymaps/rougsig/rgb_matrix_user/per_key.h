@@ -26,25 +26,25 @@ static uint8_t layout_key_layout[54] = {
     24, 36, 48
 };
 
-static Color layout_key_color[3][54] = {
+static Color layout_key_color[4][54] = {
     {
         //,-----------------------------------------------------.                    ,-----------------------------------------------------.
-            blue,    blue,    blue,    blue,     blue,   blue,                        blue,    blue,   blue,   blue,   blue,   blue,
+            cyan,    cyan,    cyan,    cyan,     cyan,   cyan,                        cyan,    cyan,   cyan,   cyan,   cyan,   cyan,
         //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
-            orange1, magenta1, white,   green,    red,    yellow,                       yellow,    red,   green,   white,   magenta1,   orange1,
+            green,  cyan, cyan,   cyan,    cyan,    cyan,                               cyan,    cyan,   cyan,   cyan,   cyan,   red,
         //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
-            orange1, magenta1, white,   green,    red,    yellow,                       yellow,    red,   green,   white,   magenta1,   orange1,
+            blue,   cyan, cyan,   cyan,    cyan,    cyan,                               cyan,    cyan,   cyan,   cyan,   cyan,   green,
         //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
-            orange1, magenta1, white,   green,    red,    yellow,                       yellow,    red,   green,   white,   magenta1,   orange1,
+            blue,   cyan, cyan,   cyan,    cyan,    cyan,                               cyan,    cyan,   cyan,   cyan,   cyan,   red,
         //|--------+--------+--------+--------+--------+--------+--------|  |--------+--------+--------+--------+--------+--------+--------|
-                                                 red,    red,     yellow,      yellow,   red,    red
+                                                 blue,    magenta,     yellow,      yellow,   magenta,    blue
                                             //`--------------------------'  `--------------------------'
     },
     {
         //,-----------------------------------------------------.                    ,-----------------------------------------------------.
-             white,    white,   white,   white,   white,   white,                       white,    white,   white,   white,   white,   white,
+             red,    white,   white,   white,   white,   white,                       white,    white,   white,   white,   white,   white,
         //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
-             white,    white,   white,   white,   white,   white,                       white,    white,   white,   white,   white,   white,
+             red,    white,   white,   white,   white,   white,                       white,    white,   white,   white,   white,   white,
         //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
              white,    white,   white,   white,   white,   white,                       white,    white,   white,   white,   white,   white,
         //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
@@ -55,9 +55,22 @@ static Color layout_key_color[3][54] = {
     },
     {
         //,-----------------------------------------------------.                    ,-----------------------------------------------------.
+             green,    white,   white,   white,   white,   white,                       white,    white,   white,   white,   white,   white,
+        //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
+             green,    white,   white,   white,   white,   white,                       white,    white,   white,   white,   white,   white,
+        //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
              white,    white,   white,   white,   white,   white,                       white,    white,   white,   white,   white,   white,
         //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
              white,    white,   white,   white,   white,   white,                       white,    white,   white,   white,   white,   white,
+        //|--------+--------+--------+--------+--------+--------+--------|  |--------+--------+--------+--------+--------+--------+--------|
+                                                  white,   white,  white,      white,   white,    white
+                                            //`--------------------------'  `--------------------------'
+    },
+    {
+        //,-----------------------------------------------------.                    ,-----------------------------------------------------.
+             blue,    white,   white,   white,   white,   white,                       white,    white,   white,   white,   white,   white,
+        //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
+             blue,    white,   white,   white,   white,   white,                       white,    white,   white,   white,   white,   white,
         //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
              white,    white,   white,   white,   white,   white,                       white,    white,   white,   white,   white,   white,
         //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
@@ -68,11 +81,38 @@ static Color layout_key_color[3][54] = {
     }
 };
 
+#define L_BASE 0
+#define L_LOWER 2
+#define L_RAISE 4
+#define L_ADJUST 8
+
+static uint8_t layer_state_layout(void) {
+    uint8_t layer = 0;
+    switch (layer_state) {
+        case L_BASE:
+            layer = 0;
+            break;
+        case L_LOWER:
+            layer = 1;
+            break;
+        case L_RAISE:
+            layer = 2;
+            break;
+        case L_ADJUST:
+        case L_ADJUST|L_LOWER:
+        case L_ADJUST|L_RAISE:
+        case L_ADJUST|L_LOWER|L_RAISE:
+            layer = 3;
+            break;
+    }
+    return layer;
+}
+
 static bool per_key(effect_params_t* params) {
     RGB_MATRIX_USE_LIMITS(led_min, led_max);
     for (uint8_t i = led_min; i < led_max; i++) {
         RGB_MATRIX_TEST_LED_FLAGS();
-        Color c = layout_key_color[0][layout_key_layout[i + (is_master ? 0 : 27)] - 1];
+        Color c = layout_key_color[layer_state_layout()][layout_key_layout[i + (is_master ? 0 : 27)] - 1];
         float v = rgb_matrix_config.hsv.v / 255.0 * (float) RGB_MATRIX_MAXIMUM_BRIGHTNESS / 255.0;
         rgb_matrix_set_color(
             i,
